@@ -11,11 +11,35 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.work.ExistingPeriodicWorkPolicy
 import com.example.mobil_programlama_proje.ui.theme.Mobil_programlama_projeTheme
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import androidx.work.ExistingWorkPolicy
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkRequest
+import java.util.concurrent.TimeUnit
+
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val backupRequest =
+            PeriodicWorkRequest.Builder(
+                com.example.mobil_programlama_proje.worker.BackupWorker::class.java,
+                15,
+                TimeUnit.MINUTES
+            ).build()
+
+        WorkManager.getInstance(applicationContext)
+            .enqueueUniquePeriodicWork(
+                "backup_worker",
+                ExistingPeriodicWorkPolicy.UPDATE,
+                backupRequest
+            )
+
         enableEdgeToEdge()
         setContent {
             Mobil_programlama_projeTheme {
@@ -29,6 +53,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
