@@ -7,11 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.navigation.compose.rememberNavController
+import com.example.mobil_programlama_proje.navigation.NoteAppNavigation
 import com.example.mobil_programlama_proje.ui.theme.Mobil_programlama_projeTheme
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
@@ -21,6 +21,10 @@ import androidx.work.WorkRequest
 import java.util.concurrent.TimeUnit
 
 
+/**
+ * Main activity that hosts the Compose navigation graph.
+ * Sets up the application theme and navigation structure.
+ */
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,9 +47,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Mobil_programlama_projeTheme {
+                val navController = rememberNavController()
+                
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    NoteAppNavigation(
+                        navController = navController,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
