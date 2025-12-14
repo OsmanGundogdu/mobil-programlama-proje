@@ -26,6 +26,9 @@ class LocationHelper(private val context: Context) {
             return null
         }
 
+        
+
+
         val locationManager =
             context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
