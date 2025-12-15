@@ -1,5 +1,10 @@
 package com.example.mobil_programlama_proje
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.Manifest
 import android.content.pm.PackageManager
 import android.hardware.Sensor
@@ -12,6 +17,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -28,6 +38,13 @@ import com.example.mobil_programlama_proje.sensor.ShakeDetector
 import com.example.mobil_programlama_proje.ui.theme.Mobil_programlama_projeTheme
 import java.util.concurrent.TimeUnit
 
+/**
+ * Main activity that hosts the Compose navigation graph.
+ * Sets up the application theme and navigation structure.
+ */
+class MainActivity : ComponentActivity() {
+
+    private lateinit var connectivityManager: ConnectivityManager
 class MainActivity : ComponentActivity() {
 
     private lateinit var sensorManager: SensorManager
@@ -36,6 +53,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // =====================
+        // BACKUP WORKER
+        // =====================
         // LOCATION PERMISSION
         checkLocationPermission()
 
@@ -53,6 +73,12 @@ class MainActivity : ComponentActivity() {
                 ExistingPeriodicWorkPolicy.UPDATE,
                 backupRequest
             )
+
+        // =====================
+        // CONNECTIVITY
+        // =====================
+        connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
         // SENSOR (SHAKE)
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
@@ -72,17 +98,48 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Mobil_programlama_projeTheme {
+
+                // INTERNET STATE
+                val isConnected = remember { mutableStateOf(isInternetAvailable()) }
+
+                // NETWORK CALLBACK
+                val networkCallback = object : ConnectivityManager.NetworkCallback() {
+                    override fun onAvailable(network: Network) {
+                        isConnected.value = true
+                    }
+
+                    override fun onLost(network: Network) {
+                        isConnected.value = false
+                    }
+                }
+
+                val request = NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .build()
+
+                connectivityManager.registerNetworkCallback(request, networkCallback)
+
                 val navController = rememberNavController()
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NoteAppNavigation(
                         navController = navController,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        isConnected = isConnected.value // 👈 NAVIGATION’A AKTARILDI
                     )
                 }
             }
         }
     }
 
+    // =====================
+    // INTERNET CHECK
+    // =====================
+    private fun isInternetAvailable(): Boolean {
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     // ==========================
     // LOCATION PERMISSION
     // ==========================
@@ -151,6 +208,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
+    androidx.compose.material3.Text(
+        text = "Hello $name!",
+        modifier = modifier
+    )
     Text(text = "Hello $name!", modifier = modifier)
 }
 

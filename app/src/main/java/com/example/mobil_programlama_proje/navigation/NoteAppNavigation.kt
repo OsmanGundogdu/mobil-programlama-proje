@@ -27,7 +27,8 @@ import com.example.mobil_programlama_proje.viewmodel.NoteListViewModel
 @Composable
 fun NoteAppNavigation(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isConnected: Boolean
 ) {
     NavHost(
         navController = navController,
