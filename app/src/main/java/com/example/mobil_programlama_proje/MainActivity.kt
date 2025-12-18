@@ -17,12 +17,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
@@ -44,10 +41,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Konum İzni Kontrolü
         checkLocationPermission()
 
-        // 2. Backup Worker Kurulumu
         val backupRequest = PeriodicWorkRequest.Builder(
             com.example.mobil_programlama_proje.worker.BackupWorker::class.java,
             15,
@@ -60,7 +55,6 @@ class MainActivity : ComponentActivity() {
             backupRequest
         )
 
-        // 3. Bağlantı ve Sensör Servislerinin Başlatılması
         connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
@@ -77,10 +71,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Mobil_programlama_projeTheme {
-                // İnternet durumunu tutan state
                 val isConnected = remember { mutableStateOf(isInternetAvailable()) }
 
-                // Network Callback: İnternet durumunu canlı dinler
                 val networkCallback = object : ConnectivityManager.NetworkCallback() {
                     override fun onAvailable(network: Network) { isConnected.value = true }
                     override fun onLost(network: Network) { isConnected.value = false }
@@ -95,7 +87,6 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    // Navigasyon grafiği
                     NoteAppNavigation(
                         navController = navController,
                         modifier = Modifier.padding(innerPadding),
@@ -106,14 +97,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // İnternet Kontrol Fonksiyonu
     private fun isInternetAvailable(): Boolean {
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    // Konum İzni Fonksiyonları
     private fun checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED) {
@@ -135,14 +124,13 @@ class MainActivity : ComponentActivity() {
             val locationHelper = LocationHelper(this)
             val location = locationHelper.getLastLocation()
             location?.let {
-                Toast.makeText(this, "Lat: ${it.latitude}, Lon: ${it.longitude}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Konum: ${it.latitude}, ${it.longitude}", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    // Yaşam Döngüsü Yönetimi
     override fun onResume() {
         super.onResume()
         sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let {
