@@ -95,4 +95,18 @@ dependencies {
     
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // OkHttp for HTTP requests (AI API calls)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // JSON parsing
+    implementation("org.json:json:20230227")
+
+    // Coroutines (should already be there, but make sure)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
+    // Material Icons Extended (for AutoAwesome icon)
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
 }
