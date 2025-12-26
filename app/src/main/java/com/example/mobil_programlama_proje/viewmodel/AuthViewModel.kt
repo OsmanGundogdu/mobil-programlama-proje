@@ -1,5 +1,7 @@
 package com.example.mobil_programlama_proje.viewmodel
 
+import androidx.lifecycle.LiveData // Bunu ekle
+import androidx.lifecycle.MutableLiveData // Bunu ekle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobil_programlama_proje.data.model.LoginRequest
@@ -8,6 +10,9 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 
+    private val _loginResult = MutableLiveData<Boolean?>()
+    val loginResult: LiveData<Boolean?> = _loginResult
+
     fun login(email: String, pass: String) {
         viewModelScope.launch {
             try {
@@ -15,14 +20,21 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 val response = repository.loginUser(request)
 
                 if (response.isSuccessful) {
-                    val authData = response.body()
-                    // TODO: Başarılı! Token'ı kaydet ve ana ekrana yönlendir
+                    // Başarılı durumda sonucu true yap
+                    _loginResult.postValue(true)
                 } else {
-                    // TODO: Hata mesajını kullanıcıya göster
+                    // Hata durumunda sonucu false yap
+                    _loginResult.postValue(false)
                 }
             } catch (e: Exception) {
-                // İnternet hatası vs.
+                // İnternet hatası vb. durumlarda false yap
+                _loginResult.postValue(false)
             }
         }
+    }
+
+    // Ekranlar arası geçişte sonucun sıfırlanması için gerekebilir
+    fun resetLoginResult() {
+        _loginResult.value = null
     }
 }

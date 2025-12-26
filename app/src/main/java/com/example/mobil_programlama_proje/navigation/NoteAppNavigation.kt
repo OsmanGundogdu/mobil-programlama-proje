@@ -9,20 +9,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.mobil_programlama_proje.data.NoteRepositoryImpl
-import com.example.mobil_programlama_proje.ui.screens.AddEditNoteScreen
-import com.example.mobil_programlama_proje.ui.screens.MainScreen
-import com.example.mobil_programlama_proje.ui.screens.NoteDetailScreen
-import com.example.mobil_programlama_proje.ui.screens.NoteListScreen
-import com.example.mobil_programlama_proje.viewmodel.AddEditNoteViewModel
-import com.example.mobil_programlama_proje.viewmodel.NoteDetailViewModel
-import com.example.mobil_programlama_proje.viewmodel.NoteListViewModel
+import com.example.mobil_programlama_proje.data.remote.AuthRepositoryImpl
+import com.example.mobil_programlama_proje.data.remote.RetrofitClient
+import com.example.mobil_programlama_proje.ui.screens.*
+import com.example.mobil_programlama_proje.viewmodel.*
 
 /**
  * Main navigation graph for the Note App.
  * Sets up all screen destinations and navigation arguments.
- * 
- * @param navController The navigation controller for managing navigation
- * @param modifier Optional modifier for the NavHost
  */
 @Composable
 fun NoteAppNavigation(
@@ -32,10 +26,31 @@ fun NoteAppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = NavigationRoutes.Main.route,
+        // Uygulamanın giriş kapısını Login yapıyoruz
+        startDestination = NavigationRoutes.Login.route,
         modifier = modifier
     ) {
-        // Main Screen - Entry point
+        // --- LOGIN SCREEN ---
+        composable(route = NavigationRoutes.Login.route) {
+            // Manuel Dependency Injection: Repository -> Factory -> ViewModel
+            val authRepository = AuthRepositoryImpl(RetrofitClient.authApiService)
+            val authViewModel: AuthViewModel = viewModel(
+                factory = AuthViewModelFactory(authRepository)
+            )
+
+            LoginScreen(
+                viewModel = authViewModel,
+                onLoginSuccess = {
+                    // Giriş başarılı olunca Main (veya NoteList) ekranına yönlendir
+                    navController.navigate(NavigationRoutes.Main.route) {
+                        // Geri tuşuna basınca Login ekranına tekrar dönmesin diye stack'i temizle
+                        popUpTo(NavigationRoutes.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // --- MAIN SCREEN (Entry point after login) ---
         composable(route = NavigationRoutes.Main.route) {
             MainScreen(
                 onNavigateToNoteList = {
@@ -46,14 +61,14 @@ fun NoteAppNavigation(
                 }
             )
         }
-        
-        // Note List Screen
+
+        // --- NOTE LIST SCREEN ---
         composable(route = NavigationRoutes.NoteList.route) {
             val repository = NoteRepositoryImpl()
             val viewModel: NoteListViewModel = viewModel(
                 factory = NoteListViewModelFactory(repository)
             )
-            
+
             NoteListScreen(
                 viewModel = viewModel,
                 onNavigateToDetail = { noteId ->
@@ -64,8 +79,8 @@ fun NoteAppNavigation(
                 }
             )
         }
-        
-        // Note Detail Screen - requires noteId argument
+
+        // --- NOTE DETAIL SCREEN ---
         composable(
             route = NavigationRoutes.NoteDetail.route,
             arguments = listOf(
@@ -79,7 +94,7 @@ fun NoteAppNavigation(
             val viewModel: NoteDetailViewModel = viewModel(
                 factory = NoteDetailViewModelFactory(repository)
             )
-            
+
             noteId?.let {
                 NoteDetailScreen(
                     noteId = it,
@@ -93,8 +108,8 @@ fun NoteAppNavigation(
                 )
             }
         }
-        
-        // Add/Edit Note Screen - optional noteId argument
+
+        // --- ADD/EDIT NOTE SCREEN ---
         composable(
             route = NavigationRoutes.AddEditNote.route,
             arguments = listOf(
@@ -110,7 +125,7 @@ fun NoteAppNavigation(
             val viewModel: AddEditNoteViewModel = viewModel(
                 factory = AddEditNoteViewModelFactory(repository)
             )
-            
+
             AddEditNoteScreen(
                 noteId = noteId,
                 viewModel = viewModel,

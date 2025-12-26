@@ -5,6 +5,8 @@ package com.example.mobil_programlama_proje.navigation
  * Provides type-safe navigation with compile-time route validation.
  */
 sealed class NavigationRoutes(val route: String) {
+
+    data object Login : NavigationRoutes("login")
     /**
      * Main screen route - entry point of the application
      */
