@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home // Home ikonu eklendi
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,47 +43,35 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Note List screen composable - Displays all notes in a scrollable list.
- * 
- * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
- * 
- * @param viewModel ViewModel for managing note list state
- * @param onNavigateToDetail Callback invoked when user taps on a note
- * @param onNavigateToAdd Callback invoked when user taps the add button
- * @param modifier Optional modifier for the screen
- */
 @Composable
 fun NoteListScreen(
     viewModel: NoteListViewModel,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToAdd: () -> Unit,
+    onNavigateToMain: () -> Unit, // YENİ PARAMETRE: Ana ekrana dönüş
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    
-    // Show error message if present
+
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(error)
             viewModel.clearError()
         }
     }
-    
-    // Show success message if present
+
     LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
             viewModel.clearSuccessMessage()
         }
     }
-    
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            // Requirement 2.4, 2.5 - FloatingActionButton for adding new notes
             FloatingActionButton(
                 onClick = onNavigateToAdd,
                 containerColor = MaterialTheme.colorScheme.primary
@@ -94,11 +83,30 @@ fun NoteListScreen(
             }
         }
     ) { paddingValues ->
-        NoteListContent(
-            uiState = uiState,
-            onNoteClick = onNavigateToDetail,
-            modifier = Modifier.padding(paddingValues)
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            NoteListContent(
+                uiState = uiState,
+                onNoteClick = onNavigateToDetail,
+                modifier = Modifier.padding(bottom = 0.dp)
+            )
+
+            FloatingActionButton(
+                onClick = onNavigateToMain,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp),
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Home,
+                    contentDescription = "Ana Ekrana Dön"
+                )
+            }
+        }
     }
 }
 

@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home // Home ikonu eklendi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ fun NoteDetailScreen(
     viewModel: NoteDetailViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToEdit: (String) -> Unit,
+    onNavigateToMain: () -> Unit, // YENİ PARAMETRE: Ana ekrana dönüş için
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -58,31 +60,53 @@ fun NoteDetailScreen(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        NoteDetailContent(
-            uiState = uiState,
-            onEditClick = { onNavigateToEdit(noteId) },
-            onDeleteClick = { showDeleteDialog = true },
-            onSummarizeClick = {
-                isGeneratingSummary = true
-                coroutineScope.launch {
-                    viewModel.generateAiSummary { summary, error ->
-                        isGeneratingSummary = false
-                        if (summary != null) {
-                            aiSummary = summary
-                            showSummaryDialog = true
-                        } else {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar(
-                                    error ?: "Özetleme başarısız"
-                                )
+        // Box kullanarak içeriği ve home butonunu üst üste bindiriyoruz
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            NoteDetailContent(
+                uiState = uiState,
+                onEditClick = { onNavigateToEdit(noteId) },
+                onDeleteClick = { showDeleteDialog = true },
+                onSummarizeClick = {
+                    isGeneratingSummary = true
+                    coroutineScope.launch {
+                        viewModel.generateAiSummary { summary, error ->
+                            isGeneratingSummary = false
+                            if (summary != null) {
+                                aiSummary = summary
+                                showSummaryDialog = true
+                            } else {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        error ?: "Özetleme başarısız"
+                                    )
+                                }
                             }
                         }
                     }
-                }
-            },
-            isGeneratingSummary = isGeneratingSummary,
-            modifier = Modifier.padding(paddingValues)
-        )
+                },
+                isGeneratingSummary = isGeneratingSummary,
+                // Butonun altında kalmaması için içeriğe padding ekleyebiliriz
+                modifier = Modifier.padding(bottom = 70.dp)
+            )
+
+            // YENİ: Sol Alt Home Butonu
+            FloatingActionButton(
+                onClick = onNavigateToMain,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp),
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Home,
+                    contentDescription = "Ana Ekrana Dön"
+                )
+            }
+        }
     }
 
     if (showDeleteDialog) {
