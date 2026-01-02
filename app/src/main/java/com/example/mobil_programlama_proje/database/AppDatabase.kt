@@ -1,40 +1,49 @@
-package com.example.mobil_programlama_proje.database;
+package com.example.mobil_programlama_proje.database
 
-import android.content.Context;
-
-import androidx.room.Database;
-import androidx.room.Room;
-import androidx.room.RoomDatabase;
-
-import com.example.mobil_programlama_proje.database.dao.NoteDao;
-import com.example.mobil_programlama_proje.database.dao.UserDao;
-import com.example.mobil_programlama_proje.database.entity.Category;
-import com.example.mobil_programlama_proje.database.entity.Note;
-import com.example.mobil_programlama_proje.database.entity.User;
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import com.example.mobil_programlama_proje.database.dao.CategoryDao
+import com.example.mobil_programlama_proje.database.dao.NoteDao
+import com.example.mobil_programlama_proje.database.dao.UserDao
+import com.example.mobil_programlama_proje.database.entity.Category
+import com.example.mobil_programlama_proje.database.entity.User
+import com.example.mobil_programlama_proje.model.Note
 
 @Database(
-        entities = {
-                User.class,
-                Note.class,
-                Category.class
-        },
-        version = 1
+    entities = [
+        User::class,
+        Note::class,
+        Category::class
+    ],
+    version = 4,
+    exportSchema = false
 )
-public abstract class AppDatabase extends RoomDatabase {
+abstract class AppDatabase : RoomDatabase() {
 
-    public abstract UserDao userDao();
-    private static AppDatabase instance;
+    abstract fun userDao(): UserDao
+    abstract fun noteDao(): NoteDao
+    abstract fun categoryDao(): CategoryDao
 
-    public abstract NoteDao noteDao();
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
-    public static synchronized AppDatabase getInstance(Context context) {
-        if (instance == null) {
-            instance = Room.databaseBuilder(
-                    context.getApplicationContext(),
-                    AppDatabase.class,
+        fun getDatabase(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
                     "smart_note_db"
-            ).allowMainThreadQueries().build();
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                INSTANCE = instance
+                instance
+            }
         }
-        return instance;
+
+        fun getInstance(context: Context): AppDatabase = getDatabase(context)
     }
 }

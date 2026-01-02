@@ -43,19 +43,16 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     fun register(name: String, email: String) {
         viewModelScope.launch {
             try {
-                // Yeni user oluşturuyoruz
-                val newUser = User().apply {
-                    this.name = name
-                    this.email = email
-                }
+                val newUser = User(
+                    name = name,
+                    email = email
+                )
 
-                // Repository üzerinden Room'a kayıt atıyoruz
                 repository.insertUser(newUser)
 
-                // Kayıt işlemi hatasız bittiyse true
                 _registerResult.postValue(true)
             } catch (e: Exception) {
-                // Email çakışması vs olursa false dönebilir
+                e.printStackTrace()
                 _registerResult.postValue(false)
             }
         }

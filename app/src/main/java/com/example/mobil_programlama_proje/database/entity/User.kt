@@ -1,13 +1,13 @@
-package com.example.mobil_programlama_proje.database.entity;
+package com.example.mobil_programlama_proje.database.entity
 
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-@Entity
-public class User {
+@Entity(tableName = "user")
+data class User(
     @PrimaryKey(autoGenerate = true)
-    public int userId;
+    val userId: Int = 0,
 
-    public String name;
-    public String email;
-}
+    val name: String,
+    val email: String
+)

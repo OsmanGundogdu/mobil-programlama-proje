@@ -1,27 +1,24 @@
-package com.example.mobil_programlama_proje.database.dao;
+package com.example.mobil_programlama_proje.database.dao
 
-import androidx.room.Dao;
-import androidx.room.Delete;
-import androidx.room.Insert;
-import androidx.room.Query;
-import com.example.mobil_programlama_proje.database.entity.User;
-import java.util.List;
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.example.mobil_programlama_proje.database.entity.User
 
 @Dao
-public interface UserDao {
-
-    @Insert
-    void insert(User user);
-
-    @Query("SELECT * FROM User")
-    List<User> getAllUsers();
+interface UserDao {
+    // Aynı mail ile kayıt olmaya çalışırsa eskisiyle değiştirir veya hata vermez
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUser(user: User)
 
     @Delete
-    void delete(User user);
+    suspend fun delete(user: User)
 
-    @Query("SELECT * FROM User WHERE email = :email LIMIT 1")
-    User getUserByEmail(String email);
+    @Query("SELECT * FROM user WHERE email = :email LIMIT 1")
+    suspend fun getUserByEmail(email: String): User?
 
-    @Insert
-    void insertUser(User user);
+    @Query("SELECT * FROM user")
+    suspend fun getAllUsers(): List<User>
 }

@@ -1,13 +1,11 @@
-package com.example.mobil_programlama_proje.database.entity;
+package com.example.mobil_programlama_proje.database.entity
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
-
-@Entity
-public class Category {
+@Entity(tableName = "categories")
+data class Category(
     @PrimaryKey(autoGenerate = true)
-    public int categoryId;
-
-    public String categoryName;
-}
+    val categoryId: Int = 0,
+    val categoryName: String
+)
