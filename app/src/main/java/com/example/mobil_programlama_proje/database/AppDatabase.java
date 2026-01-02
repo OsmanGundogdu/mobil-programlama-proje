@@ -7,6 +7,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
 import com.example.mobil_programlama_proje.database.dao.NoteDao;
+import com.example.mobil_programlama_proje.database.dao.UserDao;
 import com.example.mobil_programlama_proje.database.entity.Category;
 import com.example.mobil_programlama_proje.database.entity.Note;
 import com.example.mobil_programlama_proje.database.entity.User;
@@ -21,6 +22,7 @@ import com.example.mobil_programlama_proje.database.entity.User;
 )
 public abstract class AppDatabase extends RoomDatabase {
 
+    public abstract UserDao userDao();
     private static AppDatabase instance;
 
     public abstract NoteDao noteDao();

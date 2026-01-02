@@ -2,6 +2,7 @@ package com.example.mobil_programlama_proje.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext // Context için gerekli
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -9,31 +10,33 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.mobil_programlama_proje.data.NoteRepositoryImpl
-import com.example.mobil_programlama_proje.data.remote.AuthRepositoryImpl
-import com.example.mobil_programlama_proje.data.remote.RetrofitClient
+import com.example.mobil_programlama_proje.database.AppDatabase
 import com.example.mobil_programlama_proje.ui.screens.*
 import com.example.mobil_programlama_proje.viewmodel.*
+import com.example.mobil_programlama_proje.data.remote.AuthRepository
 
-/**
- * Main navigation graph for the Note App.
- * Sets up all screen destinations and navigation arguments.
- */
 @Composable
 fun NoteAppNavigation(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     isConnected: Boolean
 ) {
+    // 1. ADIM: Veritabanı ve DAO'ya erişim (Local Veritabanı için)
+    val context = LocalContext.current
+    val database = AppDatabase.getInstance(context)
+    val userDao = database.userDao()
+
+    // Repository'yi burada oluşturuyoruz (UserDao istiyor)
+    val authRepository = AuthRepository(userDao)
+
     NavHost(
         navController = navController,
-        // Uygulamanın giriş kapısını Login yapıyoruz
         startDestination = NavigationRoutes.Login.route,
         modifier = modifier
     ) {
         // --- LOGIN SCREEN ---
         composable(route = NavigationRoutes.Login.route) {
-            // Manuel Dependency Injection: Repository -> Factory -> ViewModel
-            val authRepository = AuthRepositoryImpl(RetrofitClient.authApiService)
+            // Factory içine artık Retrofit değil, yukarıda oluşturduğumuz local repository'yi veriyoruz
             val authViewModel: AuthViewModel = viewModel(
                 factory = AuthViewModelFactory(authRepository)
             )
@@ -41,16 +44,38 @@ fun NoteAppNavigation(
             LoginScreen(
                 viewModel = authViewModel,
                 onLoginSuccess = {
-                    // Giriş başarılı olunca Main (veya NoteList) ekranına yönlendir
                     navController.navigate(NavigationRoutes.Main.route) {
-                        // Geri tuşuna basınca Login ekranına tekrar dönmesin diye stack'i temizle
                         popUpTo(NavigationRoutes.Login.route) { inclusive = true }
                     }
+                },
+                // BURASI EKSİKTİ, ŞİMDİ EKLENDİ:
+                onNavigateToRegister = {
+                    navController.navigate(NavigationRoutes.Register.route)
                 }
             )
         }
 
-        // --- MAIN SCREEN (Entry point after login) ---
+        // --- REGISTER SCREEN (YENİ EKLENDİ) ---
+        composable(route = NavigationRoutes.Register.route) {
+            val authViewModel: AuthViewModel = viewModel(
+                factory = AuthViewModelFactory(authRepository)
+            )
+
+            RegisterScreen(
+                viewModel = authViewModel,
+                onRegisterSuccess = {
+                    // Kayıt başarılı olunca Login ekranına geri dönüp giriş yapmasını sağlayabiliriz
+                    // veya direkt Main'e atabiliriz. Şimdilik Login'e dönsün:
+                    navController.popBackStack()
+                },
+                onNavigateToLogin = {
+                    // "Zaten hesabım var"a basınca geri dön
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // --- MAIN SCREEN ---
         composable(route = NavigationRoutes.Main.route) {
             MainScreen(
                 onNavigateToNoteList = {

@@ -1,13 +1,10 @@
 package com.example.mobil_programlama_proje.database.dao;
 
-
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
-
 import com.example.mobil_programlama_proje.database.entity.User;
-
 import java.util.List;
 
 @Dao
@@ -21,4 +18,10 @@ public interface UserDao {
 
     @Delete
     void delete(User user);
+
+    @Query("SELECT * FROM User WHERE email = :email LIMIT 1")
+    User getUserByEmail(String email);
+
+    @Insert
+    void insertUser(User user);
 }

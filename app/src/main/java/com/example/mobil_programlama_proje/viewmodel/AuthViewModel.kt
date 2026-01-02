@@ -1,40 +1,69 @@
 package com.example.mobil_programlama_proje.viewmodel
 
-import androidx.lifecycle.LiveData // Bunu ekle
-import androidx.lifecycle.MutableLiveData // Bunu ekle
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mobil_programlama_proje.data.model.LoginRequest
-import com.example.mobil_programlama_proje.data.remote.AuthRepository
+import com.example.mobil_programlama_proje.database.entity.User // Senin User Entity'n
+import com.example.mobil_programlama_proje.data.remote.AuthRepository // Repository sınıfın
 import kotlinx.coroutines.launch
 
 class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 
+    // Giriş sonucu (True: Başarılı, False: Kullanıcı bulunamadı)
     private val _loginResult = MutableLiveData<Boolean?>()
     val loginResult: LiveData<Boolean?> = _loginResult
 
-    fun login(email: String, pass: String) {
+    // Kayıt sonucu
+    private val _registerResult = MutableLiveData<Boolean?>()
+    val registerResult: LiveData<Boolean?> = _registerResult
+
+    // ARTIK SADECE EMAIL ALIYORUZ
+    fun login(email: String) {
         viewModelScope.launch {
             try {
-                val request = LoginRequest(email, pass)
-                val response = repository.loginUser(request)
+                // Repository'de "getUserByEmail" gibi bir fonksiyon olduğunu varsayıyoruz
+                // Eğer veritabanında bu mail varsa user dönecek, yoksa null dönecek.
+                val user = repository.getUserByEmail(email)
 
-                if (response.isSuccessful) {
-                    // Başarılı durumda sonucu true yap
+                if (user != null) {
+                    // Kullanıcı bulundu, giriş başarılı
                     _loginResult.postValue(true)
                 } else {
-                    // Hata durumunda sonucu false yap
+                    // Kullanıcı yok, kayıt sayfasına yönlendirmek gerekebilir
                     _loginResult.postValue(false)
                 }
             } catch (e: Exception) {
-                // İnternet hatası vb. durumlarda false yap
                 _loginResult.postValue(false)
             }
         }
     }
 
-    // Ekranlar arası geçişte sonucun sıfırlanması için gerekebilir
-    fun resetLoginResult() {
+    // YENİ EKLENEN KAYIT FONKSİYONU
+    fun register(name: String, email: String) {
+        viewModelScope.launch {
+            try {
+                // Yeni user oluşturuyoruz
+                val newUser = User().apply {
+                    this.name = name
+                    this.email = email
+                }
+
+                // Repository üzerinden Room'a kayıt atıyoruz
+                repository.insertUser(newUser)
+
+                // Kayıt işlemi hatasız bittiyse true
+                _registerResult.postValue(true)
+            } catch (e: Exception) {
+                // Email çakışması vs olursa false dönebilir
+                _registerResult.postValue(false)
+            }
+        }
+    }
+
+    // Ekranlar arası geçişte state temizlemek için
+    fun resetStates() {
         _loginResult.value = null
+        _registerResult.value = null
     }
 }

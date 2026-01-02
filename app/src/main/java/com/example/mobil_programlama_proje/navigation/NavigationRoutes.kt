@@ -6,6 +6,8 @@ package com.example.mobil_programlama_proje.navigation
  */
 sealed class NavigationRoutes(val route: String) {
 
+    object Register : NavigationRoutes("register")
+
     data object Login : NavigationRoutes("login")
     /**
      * Main screen route - entry point of the application
