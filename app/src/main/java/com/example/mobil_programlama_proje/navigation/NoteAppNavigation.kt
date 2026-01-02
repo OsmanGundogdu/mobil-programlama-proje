@@ -9,7 +9,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.mobil_programlama_proje.data.NoteRepositoryImpl
+import com.example.mobil_programlama_proje.data.NoteRepository
 import com.example.mobil_programlama_proje.database.AppDatabase
 import com.example.mobil_programlama_proje.ui.screens.*
 import com.example.mobil_programlama_proje.viewmodel.*
@@ -89,7 +89,8 @@ fun NoteAppNavigation(
 
         // --- NOTE LIST SCREEN ---
         composable(route = NavigationRoutes.NoteList.route) {
-            val repository = NoteRepositoryImpl()
+            val noteDao = database.noteDao()
+            val repository = NoteRepository(noteDao)
             val viewModel: NoteListViewModel = viewModel(
                 factory = NoteListViewModelFactory(repository)
             )
@@ -115,7 +116,9 @@ fun NoteAppNavigation(
             )
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString(NavigationRoutes.NoteDetail.ARG_NOTE_ID)
-            val repository = NoteRepositoryImpl()
+            val noteDao = database.noteDao()
+            val repository = NoteRepository(noteDao)
+
             val viewModel: NoteDetailViewModel = viewModel(
                 factory = NoteDetailViewModelFactory(repository)
             )
@@ -146,7 +149,9 @@ fun NoteAppNavigation(
             )
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString(NavigationRoutes.AddEditNote.ARG_NOTE_ID)
-            val repository = NoteRepositoryImpl()
+            val noteDao = database.noteDao()
+            val repository = NoteRepository(noteDao)
+
             val viewModel: AddEditNoteViewModel = viewModel(
                 factory = AddEditNoteViewModelFactory(repository)
             )

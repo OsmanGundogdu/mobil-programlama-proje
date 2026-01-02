@@ -134,24 +134,34 @@ class AddEditNoteViewModel(
      */
     fun saveNote() {
         val currentState = _uiState.value
-        
+
+        // LOG EKLEME 1: Butona basıldı mı?
+        android.util.Log.d("SaveDebug", "Save butonuna basıldı. Başlık: ${currentState.title}, İçerik: ${currentState.content}")
+
         // Validate input
         if (!validateInput()) {
+            // LOG EKLEME 2: Validasyona takıldı mı?
+            android.util.Log.d("SaveDebug", "Validasyon hatası! Başlık veya içerik kurallara uymuyor.")
+            android.util.Log.d("SaveDebug", "Hata Mesajları -> Başlık: ${currentState.titleError}, İçerik: ${currentState.contentError}")
             return
         }
-        
+
         viewModelScope.launch {
             _uiState.value = currentState.copy(
-                isLoading = true, 
+                isLoading = true,
                 error = null,
                 titleError = null,
                 contentError = null
             )
-            
+
             try {
+                // LOG EKLEME 3: Kayıt başlıyor
+                android.util.Log.d("SaveDebug", "Repository kayıt işlemi başlatılıyor...")
+
                 val noteId = editingNoteId
                 if (noteId != null) {
-                    // Update existing note
+                    // Update logic...
+                    android.util.Log.d("SaveDebug", "Güncelleme yapılıyor ID: $noteId")
                     val existingNote = repository.getNoteById(noteId)
                     if (existingNote != null) {
                         val updatedNote = existingNote.copy(
@@ -160,33 +170,37 @@ class AddEditNoteViewModel(
                             updatedAt = System.currentTimeMillis()
                         )
                         repository.updateNote(updatedNote)
-                    } else {
-                        _uiState.value = currentState.copy(
-                            isLoading = false,
-                            error = "Note not found. It may have been deleted."
-                        )
-                        return@launch
                     }
                 } else {
                     // Create new note
+                    android.util.Log.d("SaveDebug", "Yeni not oluşturuluyor...")
+
                     val newNote = Note(
                         title = currentState.title.trim(),
                         content = currentState.content.trim()
+                        // userId şimdilik null veya 0 gidebilir, Note.kt modeline göre değişir
                     )
+
                     repository.insertNote(newNote)
                 }
-                
+
+                android.util.Log.d("SaveDebug", "Kayıt Başarılı! UI güncelleniyor.")
+
                 _uiState.value = currentState.copy(
                     isLoading = false,
                     error = null,
-                    isSaved = true,
+                    isSaved = true, // <-- Burası true olunca ekran kapanmalı
                     titleError = null,
                     contentError = null
                 )
             } catch (e: Exception) {
+                // LOG EKLEME 4: Hata çıktı!
+                android.util.Log.e("SaveDebug", "Kayıt sırasında hata oluştu: ${e.message}")
+                e.printStackTrace()
+
                 _uiState.value = currentState.copy(
                     isLoading = false,
-                    error = "Failed to save note. Please try again."
+                    error = "Kayıt başarısız: ${e.message}"
                 )
             }
         }
