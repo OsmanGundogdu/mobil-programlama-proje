@@ -85,6 +85,13 @@ fun NoteAppNavigation(
                 },
                 onNavigateToAddNote = {
                     navController.navigate(NavigationRoutes.AddEditNote.createRouteForAdd())
+                },
+                onLogout = {
+                    preferenceManager.setLoggedIn(false)
+
+                    navController.navigate(NavigationRoutes.Login.route) {
+                        popUpTo(NavigationRoutes.Main.route) { inclusive = true }
+                    }
                 }
             )
         }
