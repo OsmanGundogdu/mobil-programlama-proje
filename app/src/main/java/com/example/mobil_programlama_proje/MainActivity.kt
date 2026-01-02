@@ -24,6 +24,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.example.mobil_programlama_proje.navigation.NoteAppNavigation
@@ -43,17 +44,20 @@ class MainActivity : ComponentActivity() {
 
         checkLocationPermission()
 
-        val backupRequest = PeriodicWorkRequest.Builder(
-            com.example.mobil_programlama_proje.worker.BackupWorker::class.java,
-            15,
-            TimeUnit.MINUTES
-        ).build()
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+            .build()
 
-        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-            "backup_worker",
-            ExistingPeriodicWorkPolicy.UPDATE,
-            backupRequest
+        // 2. İSTEK (TEST İÇİN DEĞİŞTİRDİK):
+        // "Periodic" yerine "OneTime" yaptık ki 15 dk beklemesin, hemen çalışsın.
+        val backupRequest = OneTimeWorkRequest.Builder(
+            com.example.mobil_programlama_proje.worker.BackupWorker::class.java
         )
+            .setConstraints(constraints)
+            .build()
+
+        // 3. KUYRUĞA EKLE
+        WorkManager.getInstance(applicationContext).enqueue(backupRequest)
 
         connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager

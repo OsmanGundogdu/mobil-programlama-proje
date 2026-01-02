@@ -34,4 +34,7 @@ interface NoteDao {
     // Arama fonksiyonu (Repository'de vardı, buraya da ekleyelim)
     @Query("SELECT * FROM notes WHERE title LIKE '%' || :searchQuery || '%' OR content LIKE '%' || :searchQuery || '%'")
     fun searchNotes(searchQuery: String): Flow<List<Note>>
+
+    @Query("SELECT * FROM notes")
+    suspend fun getAllNotesSync(): List<Note>
 }
