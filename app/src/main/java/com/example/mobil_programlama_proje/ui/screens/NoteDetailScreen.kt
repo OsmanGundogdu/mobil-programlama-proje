@@ -27,7 +27,7 @@ fun NoteDetailScreen(
     viewModel: NoteDetailViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToEdit: (String) -> Unit,
-    onNavigateToMain: () -> Unit, // YENİ PARAMETRE: Ana ekrana dönüş için
+    onNavigateToHome: () -> Unit, // YENİ PARAMETRE: Ana ekrana dönüş için
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -60,7 +60,6 @@ fun NoteDetailScreen(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        // Box kullanarak içeriği ve home butonunu üst üste bindiriyoruz
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -95,7 +94,7 @@ fun NoteDetailScreen(
 
             // YENİ: Sol Alt Home Butonu
             FloatingActionButton(
-                onClick = onNavigateToMain,
+                onClick = onNavigateToHome,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(16.dp),

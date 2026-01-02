@@ -4,11 +4,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mobil_programlama_proje.database.entity.User // Senin User Entity'n
-import com.example.mobil_programlama_proje.data.remote.AuthRepository // Repository sınıfın
+import com.example.mobil_programlama_proje.data.remote.AuthRepository
+import com.example.mobil_programlama_proje.database.entity.User
+import com.example.mobil_programlama_proje.database.PreferenceManager // <-- ÖNEMLİ IMPORT
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
+// Constructor'a preferenceManager eklendi
+class AuthViewModel(
+    private val repository: AuthRepository,
+    private val preferenceManager: PreferenceManager
+) : ViewModel() {
 
     // Giriş sonucu (True: Başarılı, False: Kullanıcı bulunamadı)
     private val _loginResult = MutableLiveData<Boolean?>()
@@ -18,19 +23,24 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
     private val _registerResult = MutableLiveData<Boolean?>()
     val registerResult: LiveData<Boolean?> = _registerResult
 
-    // ARTIK SADECE EMAIL ALIYORUZ
+    // --- YENİ EKLENEN: Kayıtlı Emaili Getir ---
+    fun getSavedEmail(): String {
+        return preferenceManager.getLastEmail()
+    }
+
     fun login(email: String) {
         viewModelScope.launch {
             try {
-                // Repository'de "getUserByEmail" gibi bir fonksiyon olduğunu varsayıyoruz
-                // Eğer veritabanında bu mail varsa user dönecek, yoksa null dönecek.
                 val user = repository.getUserByEmail(email)
 
                 if (user != null) {
-                    // Kullanıcı bulundu, giriş başarılı
+                    // --- YENİ EKLENEN: Giriş başarılıysa emaili hafızaya at ---
+                    preferenceManager.saveLastEmail(email)
+                    preferenceManager.setLoggedIn(true)
+                    // ----------------------------------------------------------
+
                     _loginResult.postValue(true)
                 } else {
-                    // Kullanıcı yok, kayıt sayfasına yönlendirmek gerekebilir
                     _loginResult.postValue(false)
                 }
             } catch (e: Exception) {
@@ -39,7 +49,6 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
-    // YENİ EKLENEN KAYIT FONKSİYONU
     fun register(name: String, email: String) {
         viewModelScope.launch {
             try {
@@ -58,7 +67,6 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
-    // Ekranlar arası geçişte state temizlemek için
     fun resetStates() {
         _loginResult.value = null
         _registerResult.value = null

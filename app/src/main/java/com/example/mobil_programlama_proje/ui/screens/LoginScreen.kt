@@ -17,9 +17,10 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf(viewModel.getSavedEmail()) }
+
     val loginResult by viewModel.loginResult.observeAsState()
-    val context = LocalContext.current // Toast mesajı için gerekli
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -58,16 +59,14 @@ fun LoginScreen(
             Text("Hesabın yok mu? Hemen Kaydol")
         }
 
-        // --- SONUÇ DİNLEME KISMI ---
         LaunchedEffect(loginResult) {
             if (loginResult == true) {
                 Toast.makeText(context, "Giriş Başarılı!", Toast.LENGTH_SHORT).show()
-                viewModel.resetStates() // Tekrar giriş yapılabilir olsun diye
+                viewModel.resetStates()
                 onLoginSuccess()
             } else if (loginResult == false) {
-                // EĞER KULLANICI BULUNAMAZSA BURASI ÇALIŞACAK
                 Toast.makeText(context, "Kullanıcı bulunamadı! Lütfen önce kayıt olun.", Toast.LENGTH_LONG).show()
-                viewModel.resetStates() // Hatayı sıfırla ki tekrar basabilsin
+                viewModel.resetStates()
             }
         }
     }

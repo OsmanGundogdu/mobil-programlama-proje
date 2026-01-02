@@ -48,7 +48,7 @@ fun NoteListScreen(
     viewModel: NoteListViewModel,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToAdd: () -> Unit,
-    onNavigateToMain: () -> Unit, // YENİ PARAMETRE: Ana ekrana dönüş
+    onNavigateToHome: () -> Unit, // YENİ PARAMETRE: Ana ekrana dönüş
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -95,7 +95,7 @@ fun NoteListScreen(
             )
 
             FloatingActionButton(
-                onClick = onNavigateToMain,
+                onClick = onNavigateToHome,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(16.dp),

@@ -1,6 +1,7 @@
 package com.example.mobil_programlama_proje.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -14,6 +15,7 @@ import com.example.mobil_programlama_proje.database.AppDatabase
 import com.example.mobil_programlama_proje.ui.screens.*
 import com.example.mobil_programlama_proje.viewmodel.*
 import com.example.mobil_programlama_proje.data.remote.AuthRepository
+import com.example.mobil_programlama_proje.database.PreferenceManager // <-- IMPORT
 
 @Composable
 fun NoteAppNavigation(
@@ -25,8 +27,11 @@ fun NoteAppNavigation(
     val database = AppDatabase.getInstance(context)
     val userDao = database.userDao()
 
-    // Repository
+    // Repository ve Manager Hazırlığı
     val authRepository = AuthRepository(userDao)
+
+    // 1. MANAGER'I BURADA OLUŞTURUYORUZ
+    val preferenceManager = remember { PreferenceManager(context) }
 
     NavHost(
         navController = navController,
@@ -35,8 +40,9 @@ fun NoteAppNavigation(
     ) {
         // --- LOGIN SCREEN ---
         composable(route = NavigationRoutes.Login.route) {
+            // 2. FACTORY'YE HEM REPO HEM MANAGER VERİYORUZ
             val authViewModel: AuthViewModel = viewModel(
-                factory = AuthViewModelFactory(authRepository)
+                factory = AuthViewModelFactory(authRepository, preferenceManager)
             )
 
             LoginScreen(
@@ -54,8 +60,9 @@ fun NoteAppNavigation(
 
         // --- REGISTER SCREEN ---
         composable(route = NavigationRoutes.Register.route) {
+            // Register ekranı için de aynı factory
             val authViewModel: AuthViewModel = viewModel(
-                factory = AuthViewModelFactory(authRepository)
+                factory = AuthViewModelFactory(authRepository, preferenceManager)
             )
 
             RegisterScreen(
@@ -68,6 +75,7 @@ fun NoteAppNavigation(
                 }
             )
         }
+
 
         // --- MAIN SCREEN ---
         composable(route = NavigationRoutes.Main.route) {
@@ -97,10 +105,8 @@ fun NoteAppNavigation(
                 onNavigateToAdd = {
                     navController.navigate(NavigationRoutes.AddEditNote.createRouteForAdd())
                 },
-                // BURASI GÜNCELLENDİ: Parametre adı onNavigateToMain oldu
-                onNavigateToMain = {
+                onNavigateToHome = {
                     navController.navigate(NavigationRoutes.Main.route) {
-                        // Main ekrana kadar geri dön, ama Main ekranı açık kalsın (inclusive = false)
                         popUpTo(NavigationRoutes.Main.route) { inclusive = false }
                     }
                 }
@@ -134,8 +140,7 @@ fun NoteAppNavigation(
                     onNavigateToEdit = { id ->
                         navController.navigate(NavigationRoutes.AddEditNote.createRouteForEdit(id))
                     },
-                    // BURASI GÜNCELLENDİ: Parametre adı onNavigateToMain oldu
-                    onNavigateToMain = {
+                    onNavigateToHome = {
                         navController.navigate(NavigationRoutes.Main.route) {
                             popUpTo(NavigationRoutes.Main.route) { inclusive = false }
                         }
