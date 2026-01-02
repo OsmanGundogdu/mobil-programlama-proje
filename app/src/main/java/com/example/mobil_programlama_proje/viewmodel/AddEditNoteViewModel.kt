@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobil_programlama_proje.data.NoteRepository
 import com.example.mobil_programlama_proje.model.AddEditNoteUiState
+import com.example.mobil_programlama_proje.database.PreferenceManager
 import com.example.mobil_programlama_proje.model.Note
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 /**
  * ViewModel for the Add/Edit Note screen.
@@ -17,9 +19,10 @@ import kotlinx.coroutines.launch
  * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5
  */
 class AddEditNoteViewModel(
-    private val repository: NoteRepository
+    private val repository: NoteRepository,
+    private val preferenceManager: PreferenceManager
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(AddEditNoteUiState())
     val uiState: StateFlow<AddEditNoteUiState> = _uiState.asStateFlow()
     
@@ -134,77 +137,44 @@ class AddEditNoteViewModel(
      */
     fun saveNote() {
         val currentState = _uiState.value
-
-        // LOG EKLEME 1: Butona basıldı mı?
-        android.util.Log.d("SaveDebug", "Save butonuna basıldı. Başlık: ${currentState.title}, İçerik: ${currentState.content}")
-
-        // Validate input
-        if (!validateInput()) {
-            // LOG EKLEME 2: Validasyona takıldı mı?
-            android.util.Log.d("SaveDebug", "Validasyon hatası! Başlık veya içerik kurallara uymuyor.")
-            android.util.Log.d("SaveDebug", "Hata Mesajları -> Başlık: ${currentState.titleError}, İçerik: ${currentState.contentError}")
-            return
-        }
+        if (!validateInput()) return
 
         viewModelScope.launch {
-            _uiState.value = currentState.copy(
-                isLoading = true,
-                error = null,
-                titleError = null,
-                contentError = null
-            )
+            _uiState.value = currentState.copy(isLoading = true)
 
             try {
-                // LOG EKLEME 3: Kayıt başlıyor
-                android.util.Log.d("SaveDebug", "Repository kayıt işlemi başlatılıyor...")
+                // MAILI AL
+                val currentUserEmail = preferenceManager.getLastEmail()
 
                 val noteId = editingNoteId
                 if (noteId != null) {
-                    // Update logic...
-                    android.util.Log.d("SaveDebug", "Güncelleme yapılıyor ID: $noteId")
                     val existingNote = repository.getNoteById(noteId)
                     if (existingNote != null) {
                         val updatedNote = existingNote.copy(
                             title = currentState.title.trim(),
                             content = currentState.content.trim(),
-                            updatedAt = System.currentTimeMillis()
+                            updatedAt = System.currentTimeMillis(),
+                            userEmail = currentUserEmail
                         )
                         repository.updateNote(updatedNote)
                     }
                 } else {
-                    // Create new note
-                    android.util.Log.d("SaveDebug", "Yeni not oluşturuluyor...")
-
                     val newNote = Note(
+                        id = UUID.randomUUID().toString(),
                         title = currentState.title.trim(),
-                        content = currentState.content.trim()
-                        // userId şimdilik null veya 0 gidebilir, Note.kt modeline göre değişir
+                        content = currentState.content.trim(),
+                        userEmail = currentUserEmail
                     )
-
                     repository.insertNote(newNote)
                 }
 
-                android.util.Log.d("SaveDebug", "Kayıt Başarılı! UI güncelleniyor.")
-
-                _uiState.value = currentState.copy(
-                    isLoading = false,
-                    error = null,
-                    isSaved = true, // <-- Burası true olunca ekran kapanmalı
-                    titleError = null,
-                    contentError = null
-                )
+                _uiState.value = currentState.copy(isLoading = false, isSaved = true)
             } catch (e: Exception) {
-                // LOG EKLEME 4: Hata çıktı!
-                android.util.Log.e("SaveDebug", "Kayıt sırasında hata oluştu: ${e.message}")
-                e.printStackTrace()
-
-                _uiState.value = currentState.copy(
-                    isLoading = false,
-                    error = "Kayıt başarısız: ${e.message}"
-                )
+                _uiState.value = currentState.copy(isLoading = false, error = e.message)
             }
         }
     }
+
     
     /**
      * Clear any error message from the UI state.

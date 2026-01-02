@@ -12,10 +12,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NoteDao {
 
-    // Tablo adını 'notes' olarak değiştirdiğimiz için sorguyu da güncelledik
-    @Query("SELECT * FROM notes ORDER BY createdAt DESC")
-    fun getAllNotes(): Flow<List<Note>>
+    // ARTIK SADECE O MAILE AIT NOTLAR GELİYOR
+    @Query("SELECT * FROM notes WHERE userEmail = :email ORDER BY createdAt DESC")
+    fun getNotesByUser(email: String): Flow<List<Note>>
 
+    // ... (getNoteById, insert, update, delete aynı kalıyor) ...
     @Query("SELECT * FROM notes WHERE id = :noteId")
     suspend fun getNoteById(noteId: String): Note?
 
@@ -31,9 +32,13 @@ interface NoteDao {
     @Query("DELETE FROM notes WHERE id = :noteId")
     suspend fun deleteById(noteId: String)
 
-    // Arama fonksiyonu (Repository'de vardı, buraya da ekleyelim)
-    @Query("SELECT * FROM notes WHERE title LIKE '%' || :searchQuery || '%' OR content LIKE '%' || :searchQuery || '%'")
-    fun searchNotes(searchQuery: String): Flow<List<Note>>
+    // Arama da kullanıcıya özel olmalı
+    @Query("SELECT * FROM notes WHERE userEmail = :email AND (title LIKE '%' || :searchQuery || '%' OR content LIKE '%' || :searchQuery || '%')")
+    fun searchNotesByUser(email: String, searchQuery: String): Flow<List<Note>>
+
+    // Worker için senkronize getirme (Opsiyonel: Bunu da filtreleyebilirsin)
+    @Query("SELECT * FROM notes WHERE userEmail = :email")
+    suspend fun getAllNotesByUserSync(email: String): List<Note>
 
     @Query("SELECT * FROM notes")
     suspend fun getAllNotesSync(): List<Note>

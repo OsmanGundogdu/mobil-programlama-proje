@@ -17,7 +17,7 @@ import com.example.mobil_programlama_proje.model.Note
         Note::class,
         Category::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

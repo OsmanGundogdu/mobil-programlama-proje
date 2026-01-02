@@ -93,8 +93,9 @@ fun NoteAppNavigation(
         composable(route = NavigationRoutes.NoteList.route) {
             val noteDao = database.noteDao()
             val repository = NoteRepository(noteDao)
+
             val viewModel: NoteListViewModel = viewModel(
-                factory = NoteListViewModelFactory(repository)
+                factory = NoteListViewModelFactory(repository, preferenceManager)
             )
 
             NoteListScreen(
@@ -165,7 +166,7 @@ fun NoteAppNavigation(
             val repository = NoteRepository(noteDao)
 
             val viewModel: AddEditNoteViewModel = viewModel(
-                factory = AddEditNoteViewModelFactory(repository)
+                factory = AddEditNoteViewModelFactory(repository, preferenceManager)
             )
 
             AddEditNoteScreen(
